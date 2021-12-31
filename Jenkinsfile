@@ -6,7 +6,7 @@ pipeline {
         AWS_ACCOUNT_ID=sh(script:'export PATH="$PATH:/usr/local/bin" && aws sts get-caller-identity --query Account --output text', returnStdout:true).trim()
         ECR_REGISTRY="${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
         // ECR_REGISTRY = "0xxxxxxxxxxxx.dkr.ecr.us-east-1.amazonaws.com"
-        APP_REPO_NAME = "MyFlaskApp/CI_CD"
+        APP_REPO_NAME = "myflaskapp/ci_cd"
         APP_NAME = "FlaskApp"
         HOME_FOLDER = "/home/ec2-user"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
