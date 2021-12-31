@@ -44,7 +44,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 sh 'docker container ls -a'                
-                sh 'aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
+                sh 'aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin "$ECR_REGISTRY"'
                 sh 'docker pull "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
                 sh 'docker container run --name myflaskapp "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
                 
