@@ -1,3 +1,4 @@
+// pipeline için env. variables tanımlanır.
 pipeline {
     agent any
     environment {
@@ -11,7 +12,9 @@ pipeline {
         HOME_FOLDER = "/home/ec2-user"
         GIT_FOLDER = sh(script:'echo ${GIT_URL} | sed "s/.*\\///;s/.git$//"', returnStdout:true).trim()
     }
+  
     stages {
+         // 1. adımda öncelikle imageların depolanacağı AWS-ECR repo açılır. 
         stage('Create ECR Repo') {
             steps {
 
@@ -19,13 +22,14 @@ pipeline {
 
                 sh """
                    aws ecr create-repository \
-                  --repository-name ${APP_REPO_NAME} || true \
-                  --image-scanning-configuration scanOnPush=false \
-                  --image-tag-mutability MUTABLE \
-                  --region ${AWS_REGION}
+                    --repository-name ${APP_REPO_NAME} || true \
+                    --image-scanning-configuration scanOnPush=false \
+                    --image-tag-mutability MUTABLE \
+                    --region ${AWS_REGION}
                 """
             }
         }
+        // image build edilir.
         stage('Build App Docker Image') {
             steps {
                 echo 'Building App Image'
@@ -33,6 +37,7 @@ pipeline {
                 sh 'docker image ls'
             }
         }
+        // Oluşturulan image repoya push edilir.
         stage('Push Image to ECR Repo') {
             steps {
                 echo 'Pushing App Image to ECR Repo'
@@ -40,7 +45,7 @@ pipeline {
                 sh 'docker push "$ECR_REGISTRY/$APP_REPO_NAME:latest"'
             }
         }
-        
+        // image ECR dan pull edilir ve container oluşturularak koşturulur.
         stage('Deploy') {
             steps {
                 sh 'docker container ls -a'                
@@ -52,12 +57,15 @@ pipeline {
         }        
         
     }
+    
     post {
+        // Oluşturulan imagelar ve containerlar silinir
         always {
             echo 'Deleting all local images'
             sh 'docker image prune -af'
             sh 'docker container rm -f myflaskapp'
         }
+        // pipeline hata ile karşılaşması durumunda ECR repo silinir.
         failure {
 
             echo 'Delete the Image Repository on ECR due to the Failure'
